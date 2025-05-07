@@ -1,12 +1,9 @@
-ARG BASE_IMAGE=nvidia/cudagl:11.3.0-devel-ubuntu20.04
 ARG ros_distro=noetic
 ARG python_version=python3
 
-FROM ${BASE_IMAGE}
+FROM ubuntu:22.04:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
-
-SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
@@ -75,10 +72,20 @@ RUN mkdir -p external_catkin_ws/src && \
     cd ~/external_catkin_ws && \
     bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; catkin build"
 
-WORKDIR /root/
+# Install uv
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
+RUN uv self update && \
+  echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc && \
+  echo 'eval "$(uvx --generate-shell-completion bash)"' >> ~/.bashrc
+
+WORKDIR /root/workspace/
 
 COPY ./docker/scripts/. /root/scripts/
 RUN chmod -R +x /root/scripts/*
+
+RUN ./docker/scripts/initialize-uv.sh 
 
 RUN echo "ROOMBA_HOSTNAME=\"TMP_HOSTNAME\"" >> /root/.bashrc
 RUN echo "source /root/scripts/initialize-bash-shell.sh" > /root/.bashrc
