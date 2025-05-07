@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME=roomba_hack
+IMAGE_NAME=roomba_hack_shinkan2025
 CONTAINER_NAME="roomba_hack"
 echo "$0: IMAGE=${IMAGE_NAME}"
 echo "$0: CONTAINER=${CONTAINER_NAME}"
@@ -34,7 +34,6 @@ else
         xhost +
         docker run -it --rm \
             --privileged \
-            --gpus all \
             --env DISPLAY=${DISPLAY} \
             --net host \
             --volume ${PWD}/catkin_ws/:/root/roomba_hack/catkin_ws/ \

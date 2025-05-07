@@ -1,7 +1,7 @@
 ARG ros_distro=noetic
 ARG python_version=python3
 
-FROM ubuntu:22.04:latest
+FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -84,8 +84,6 @@ WORKDIR /root/workspace/
 
 COPY ./docker/scripts/. /root/scripts/
 RUN chmod -R +x /root/scripts/*
-
-RUN ./docker/scripts/initialize-uv.sh 
 
 RUN echo "ROOMBA_HOSTNAME=\"TMP_HOSTNAME\"" >> /root/.bashrc
 RUN echo "source /root/scripts/initialize-bash-shell.sh" > /root/.bashrc

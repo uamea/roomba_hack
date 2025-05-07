@@ -49,4 +49,4 @@ alias sim_mode='export ROS_MASTER_URI=http://localhost:11311; export PS1="\[[44
 ################################################################################
 
 # Move to the working directory.
-cd /root/roomba_hack/
+cd /root/roomba_hack/ && . ./.venv/bin/activate 

@@ -2,18 +2,18 @@
 #define __ROOMBA_TELEOP
 
 #include <ros/ros.h>
-
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Joy.h>
+#include <cmath>
 
 class RoombaTeleop{
     public:
         RoombaTeleop();
         void CommandCallback(const geometry_msgs::TwistConstPtr& msg);
         void JoyCallback(const sensor_msgs::JoyConstPtr& msg);
-
         void process();
+        double smoothAcceleration(double current, double target, double factor);
 
     private:
         ros::NodeHandle nh;
@@ -36,6 +36,15 @@ class RoombaTeleop{
         // ros message
         geometry_msgs::Twist cmd_vel;
         geometry_msgs::Twist joy_vel;
+        
+        // Current velocity for smooth acceleration
+        double current_linear_x_vel;
+        double current_linear_y_vel;
+        double current_angular_vel;
+        
+        // Acceleration parameters
+        double accel_factor;
+        double min_change_threshold;
 
         int HZ;
         double MAX_SPEED;
