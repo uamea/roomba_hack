@@ -69,20 +69,29 @@ void RoombaTeleop::JoyCallback(const sensor_msgs::JoyConstPtr& msg)
     // Map Up/Down arrow keys (axis 1) to linear X movement (forward/backward)
     double linear_x_target = joy.axes[1] * MAX_SPEED;
     
-    // Map Left/Right arrow keys (axis 0) to linear Y movement (left/right)
-    double linear_y_target = joy.axes[0] * MAX_SPEED;
+    // Map Left/Right arrow keys (axis 0) to angular Z movement (rotation)
+    // This replaces the previous lateral movement which isn't possible on a Roomba
+    double angular_z_from_arrows = joy.axes[0] * MAX_YAWRATE;
     
     // Map WASD keys (axes 6) to angular movement (a for left, d for right)
-    double angular_z_target = 0.0;
+    double angular_z_from_wasd = 0.0;
     if (joy.axes[6] == -1.0) {  // A key - rotate left
-        angular_z_target = VEL_RATIO * MAX_YAWRATE;
+        angular_z_from_wasd = VEL_RATIO * MAX_YAWRATE;
     } else if (joy.axes[6] == 1.0) {  // D key - rotate right
-        angular_z_target = -VEL_RATIO * MAX_YAWRATE;
+        angular_z_from_wasd = -VEL_RATIO * MAX_YAWRATE;
+    }
+    
+    // Combine angular inputs, prioritizing the larger rotation command
+    double angular_z_target = 0.0;
+    if (std::abs(angular_z_from_arrows) > std::abs(angular_z_from_wasd)) {
+        angular_z_target = angular_z_from_arrows;
+    } else {
+        angular_z_target = angular_z_from_wasd;
     }
     
     // Set target velocities for the joy_vel message
     joy_vel.linear.x = linear_x_target;
-    joy_vel.linear.y = linear_y_target;
+    joy_vel.linear.y = 0.0;  // Set to 0 as Roomba can't move sideways
     joy_vel.angular.z = angular_z_target;
 }
 
@@ -107,46 +116,43 @@ void RoombaTeleop::process()
                 if(auto_flag) {
                     // Use autonomous command velocity
                     double target_linear_x = cmd_vel.linear.x;
-                    double target_linear_y = cmd_vel.linear.y;
+                    // Ignore linear.y from autonomous commands as well
                     double target_angular_z = cmd_vel.angular.z;
                     
                     // Apply smooth acceleration to command velocity
                     current_linear_x_vel = smoothAcceleration(current_linear_x_vel, target_linear_x, accel_factor);
-                    current_linear_y_vel = smoothAcceleration(current_linear_y_vel, target_linear_y, accel_factor);
+                    current_linear_y_vel = 0.0;  // Always zero for Roomba
                     current_angular_vel = smoothAcceleration(current_angular_vel, target_angular_z, accel_factor);
                     
                 } else {
                     // Use joystick control velocity
                     double target_linear_x = joy_vel.linear.x;
-                    double target_linear_y = joy_vel.linear.y;
                     double target_angular_z = joy_vel.angular.z;
                     
                     // Apply smooth acceleration to joystick commands
                     current_linear_x_vel = smoothAcceleration(current_linear_x_vel, target_linear_x, accel_factor);
-                    current_linear_y_vel = smoothAcceleration(current_linear_y_vel, target_linear_y, accel_factor);
+                    current_linear_y_vel = 0.0;  // Always zero for Roomba
                     current_angular_vel = smoothAcceleration(current_angular_vel, target_angular_z, accel_factor);
                 }
                 
                 // Apply limits
                 vel.linear.x = std::min(std::max(current_linear_x_vel, -MAX_SPEED), MAX_SPEED);
-                vel.linear.y = std::min(std::max(current_linear_y_vel, -MAX_SPEED), MAX_SPEED);
+                vel.linear.y = 0.0;  // Always zero for Roomba
                 vel.angular.z = std::min(std::max(current_angular_vel, -MAX_YAWRATE), MAX_YAWRATE);
                 ROS_INFO_STREAM("Current velocity - linear X: " << vel.linear.x 
-                                << ", linear Y: " << vel.linear.y 
                                 << ", angular: " << vel.angular.z);
             }else{
                 // If movement is disabled, gradually slow down rather than immediate stop
                 current_linear_x_vel = smoothAcceleration(current_linear_x_vel, 0.0, accel_factor * 2);
-                current_linear_y_vel = smoothAcceleration(current_linear_y_vel, 0.0, accel_factor * 2);
+                current_linear_y_vel = 0.0;  // Always zero for Roomba
                 current_angular_vel = smoothAcceleration(current_angular_vel, 0.0, accel_factor * 2);
                 
                 vel.linear.x = current_linear_x_vel;
-                vel.linear.y = current_linear_y_vel;
+                vel.linear.y = 0.0;  // Always zero for Roomba
                 vel.angular.z = current_angular_vel;
                 
                 // If velocities are very small, just set to zero
                 if (std::abs(vel.linear.x) < min_change_threshold) vel.linear.x = 0.0;
-                if (std::abs(vel.linear.y) < min_change_threshold) vel.linear.y = 0.0;
                 if (std::abs(vel.angular.z) < min_change_threshold) vel.angular.z = 0.0;
             }
             
