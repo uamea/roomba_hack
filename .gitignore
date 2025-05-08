@@ -57,3 +57,9 @@ CATKIN_IGNORE
 
 map.pgm
 map.yaml
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+# Ignore Virtual Environment
+.venv

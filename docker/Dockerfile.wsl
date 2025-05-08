@@ -78,12 +78,27 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 RUN uv self update && \
   echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc && \
-  echo 'eval "$(uvx --generate-shell-completion bash)"' >> ~/.bashrc
+  echo 'eval "$(uvx --generate-shell-completion bash)"' >> ~/.bashrc && \
+  uv python install 3.10 && \
+  uv python pin 3.10
 
-WORKDIR /root/workspace/
+# Install additional development packages
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        # terminator (lightweight terminal multiplexer)
+        terminator && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY ./docker/scripts/. /root/scripts/
-RUN chmod -R +x /root/scripts/*
+WORKDIR /root/
+COPY ./docker/scripts /root/scripts
+RUN chmod +x /root/scripts/*.sh
+
+WORKDIR /root/roomba_hack/
+COPY pyproject.toml /root/roomba_hack/pyproject.toml
+COPY uv.lock /root/roomba_hack/uv.lock
+RUN uv venv && \
+    uv sync 
 
 RUN echo "ROOMBA_HOSTNAME=\"TMP_HOSTNAME\"" >> /root/.bashrc
 RUN echo "source /root/scripts/initialize-bash-shell.sh" > /root/.bashrc
