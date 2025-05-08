@@ -36,7 +36,7 @@ else
             --privileged \
             --env DISPLAY=${DISPLAY} \
             --net host \
-            --volume ${PWD}/catkin_ws/:/root/roomba_hack/catkin_ws/ \
+            --volume ${PWD}:/root/roomba_hack/ \
             --volume /dev/:/dev/ \
             --volume /tmp/.X11-unix:/tmp/.X11-unix \
             --name ${CONTAINER_NAME} \

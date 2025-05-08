@@ -1,0 +1,21 @@
+[project]
+name = "roomba-hack"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rospy-all>=0.0.1",
+    "cv-bridge>=1.13.0.post1",
+    "tf2-ros>=0.6.5",
+    "pykdl>=1.5.1",
+    "empy==3.3.4",
+    "pyparsing==2.4.7",
+    "opencv-python==4.8.1.78",
+    "opencv-contrib-python==4.8.1.78",
+    "defusedxml>=0.7.1",
+    "pygame>=2.6.1",
+]
+
+[[tool.uv.index]]
+url = "https://rospypi.github.io/simple"
